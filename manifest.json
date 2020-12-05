@@ -1,6 +1,6 @@
 {
   "name": "域名采集工具",
-  "version": "1.0",
+  "version": "1.0.0",
   "manifest_version": 2,
   "description": "*********获取某网址域名信息*********",
   "browser_action": {
