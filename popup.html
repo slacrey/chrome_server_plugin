@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>域名采集</title>
+</head>
+<body>
+<div style="width: 300px">
+    <h2>设置域名采集查询时间</h2>
+    <form>
+        <div><label for="start_date">开始查询日期: </label><input type="text" id="start_date"></div>
+        <div><label for="end_date">结束查询日期: </label><input type="text" id="end_date"></div>
+        <div><label for="stop_date">停止查询日期: </label><input type="text" id="stop_date"></div>
+        <div><label for="stop_date">上次错误页码: </label><input type="text" id="error_page"></div>
+        <div>
+            <input type="button" id="save_btn" value="保存" />
+            <input type="button" id="start_btn" value="开始" title="重新开始查询采集"/>
+            <input type="button" id="resume_btn" value="恢复" title="从上次错误页面开始采集" />
+            <input type="button" id="stop_btn" value="停止" />
+        </div>
+    </form>
+    <div id="status"></div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
