@@ -16,8 +16,10 @@
   "permissions": [
     "storage",
     "webNavigation",
+    "webRequestBlocking",
+    "webRequest",
     "tabs",
-    "contextMenus",
+    "*://icp.chinaz.com/*",
     "http://*.seelyn.com/"
   ],
   "background": {

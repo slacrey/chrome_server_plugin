@@ -1,18 +1,12 @@
 var totalPage;
 var page = 1;
+var jumpPage;
+
 var startDate;
 var endDate;
 var stopDate;
 var isStop = false;
-
-var max = 3000;
-var min = 5000;
 var stepQuery = 5;
-
-function randomTimeExecute(param, callback) {
-    let time = Math.ceil(Math.random() * (max - min + 1) + min);
-    setTimeout(() => callback(param, time), time);
-}
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
@@ -20,7 +14,6 @@ chrome.runtime.onMessage.addListener(
         if ("start" === request.cmd) {
 
             isStop = false;
-
             chrome.storage.sync.get({
                 startDate: '2010-01-01',
                 endDate: '2010-01-06',
@@ -34,13 +27,13 @@ chrome.runtime.onMessage.addListener(
                 stopDate = items.stopDate;
 
                 page = items.currentPage;
+                jumpPage = 0;
                 doQueryHandler();
-
             });
 
         } else if ("resume" === request.cmd) {
-            isStop = false;
 
+            isStop = false;
             var currPageElement = $("#pagelist").children("a[data-page].col-white");
             if (currPageElement && currPageElement.length > 0) {
 
@@ -56,16 +49,18 @@ chrome.runtime.onMessage.addListener(
                     stepQuery = endDate.diff(startDate, 'day');
                     stopDate = items.stopDate;
 
-                    page = items.currentPage;
-                    if (page > 1) {
-                        jumpPageHandler();
-                    } else {
-                        getDomainInfo();
-                    }
+                    jumpPage = page = items.currentPage;
+                    doQueryHandler();
                 });
             }
+        } else if ("parse_body" === request.cmd) {
+
+            isStop = false;
+            parseDomain();
         } else {
             isStop = true;
+            console.log("stop...");
+            saveQueryCondition();
         }
         //
         sendResponse({cmd: "started"});
@@ -95,24 +90,15 @@ function saveQueryCondition() {
     });
 }
 
-function jumpPageHandler() {
-    var startFormat = startDate.format('YYYY-MM-DD');
-    var endFormat = endDate.format('YYYY-MM-DD');
-
-    $("a[val='cus']")[0].click();
-    $("#start").val(startFormat);
-    $("#end").val(endFormat);
-
-    $('#btn_search')[0].click();
-
-    setTimeout(function () {
-        var enter = $("#pagelist a.col-white:last");
-        $("#pn").val(page);
-        enter[0].click();
-        randomTimeExecute(1, function(param, time){
-            getDomainInfo();
-        });
-    }, 5000);
+function parseDomain() {
+    if (jumpPage > 1) {
+        $("#pn").val(jumpPage);
+        $("#pagelist a.col-white:last")[0].click();
+        page = jumpPage;
+        jumpPage = 0;
+    } else {
+        getDomainInfo();
+    }
 }
 
 function doQueryHandler() {
@@ -126,10 +112,6 @@ function doQueryHandler() {
     $("#end").val(endFormat);
 
     $('#btn_search')[0].click();
-
-    randomTimeExecute(2, function(param, time){
-        getDomainInfo();
-    });
 
 }
 
@@ -188,10 +170,6 @@ function nextPageHandler() {
     if (nextPage && nextPage.length > 0) {
         console.log("next page number:" + ++page);
         nextPage[nextPage.length - 1].click();
-
-        randomTimeExecute(3, function(param, time){
-            getDomainInfo();
-        });
     }
 }
 
@@ -211,6 +189,7 @@ function sendMsg(msg, cmd) {
         } else if ('next_query' === response.cmd) {
             nextQueryHandler();
         } else {
+            isStop = true;
             console.log("stop...");
             saveQueryCondition();
         }

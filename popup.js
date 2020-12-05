@@ -42,7 +42,6 @@ function restore_options() {
  * 开始采集
  */
 function start_crawling() {
-
     var backPage = chrome.extension.getBackgroundPage();
     backPage.sendMsgForPopup({cmd:"start"});
     tip('domain crawling start.');
