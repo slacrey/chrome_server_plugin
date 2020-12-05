@@ -89,6 +89,9 @@ chrome.runtime.onMessage.addListener(
         if (request.msg.length > 0) {
            await postData(request.msg);
         }
+        if ("stop" === request.cmd) {
+            flag = false;
+        }
         sendResponse({cmd: request.cmd});
     });
 
