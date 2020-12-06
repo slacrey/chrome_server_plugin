@@ -20,7 +20,7 @@
     "webRequest",
     "tabs",
     "*://icp.chinaz.com/*",
-    "http://*.seelyn.com/"
+    "*://*.seelyn.com/*"
   ],
   "background": {
     "scripts": [
@@ -31,7 +31,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://icp.chinaz.com/provinces"
+        "*://icp.chinaz.com/provinces"
       ],
       "js": [
         "jquery-2.1.1.min.js",

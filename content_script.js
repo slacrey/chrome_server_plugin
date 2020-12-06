@@ -33,6 +33,10 @@ chrome.runtime.onMessage.addListener(
 
         } else if ("resume" === request.cmd) {
 
+            $("div.layui-layer").remove();
+            $("div.layui-layer-move").remove();
+            $("div.layui-layer-shade").remove();
+
             isStop = false;
             var currPageElement = $("#pagelist").children("a[data-page].col-white");
             if (currPageElement && currPageElement.length > 0) {

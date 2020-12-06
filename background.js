@@ -1,45 +1,14 @@
 var flag = false;
 var currentTabId;
 
-var max = 3000;
-var min = 5000;
-var errList = [];
+var default_max = 3000;
+var default_min = 5000;
 
-function ArrayQueue() {
-    var arr = [];
-    //入队操作
-    this.push = function (element) {
-        arr.push(element);
-        return true;
-    };
-    //出队操作
-    this.pop = function () {
-        return arr.shift();
-    };
-    //获取队首
-    this.getFront = function () {
-        return arr[0];
-    };
-    //获取队尾
-    this.getRear = function () {
-        return arr[arr.length - 1]
-    };
-    //清空队列
-    this.clear = function () {
-        arr = [];
-    };
-    //获取队长
-    this.size = function () {
-        return length;
-    };
-}
-
-var queue = new ArrayQueue();
-
-
-function randomTimeExecute(param, callback) {
-    let time = Math.ceil(Math.random() * (max - min + 1) + min);
-    setTimeout(() => callback(param, time), time);
+function randomTimeExecute(options, callback) {
+    let maxInternal = options.max || default_max;
+    let minInternal = options.min || default_min;
+    let time = Math.ceil(Math.random() * (maxInternal - minInternal + 1) + minInternal);
+    setTimeout(() => callback(time), time);
 }
 
 async function postData(requestBody) {
@@ -47,14 +16,14 @@ async function postData(requestBody) {
     $.ajax({
         type: "POST",
         cache: false,
-        url: "http://turn.seelyn.com/domain/receive",
+        url: "https://test.seelyn.com/domain/receive",
         contentType: "application/json;charset=utf-8",
         data: JSON.stringify(requestBody),
         dataType: "json",
-        success:function (message) {
+        success: function (message) {
             console.log("send data to remote done");
         },
-        error:function (message) {
+        error: function (message) {
             if ("OK" !== message.responseText) {
                 sendMsg2Tab(currentTabId, {cmd: "stop"});
                 flag = false;
@@ -65,21 +34,21 @@ async function postData(requestBody) {
 
 function sendMsgForPopup(payload) {
 
-    chrome.tabs.getSelected(null, function (tab) {
+    chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+
         if ("start" === payload.cmd || "resume" === payload.cmd) {
             flag = true;
         } else if ("stop" === payload.cmd) {
             flag = false;
         }
-        currentTabId = tab.id;
-        sendMsg2Tab(currentTabId, payload)
+        currentTabId = tabs[0].id;
+        sendMsg2Tab(currentTabId, payload);
     });
-
 }
 
 function sendMsg2Tab(tabId, payload) {
     chrome.tabs.sendMessage(tabId, payload, function (response) {
-        console.log(response);
+        //console.log(response);
     });
 }
 
@@ -87,7 +56,7 @@ chrome.runtime.onMessage.addListener(
     async function (request, sender, sendResponse) {
 
         if (request.msg.length > 0) {
-           await postData(request.msg);
+            await postData(request.msg);
         }
         if ("stop" === request.cmd) {
             flag = false;
@@ -95,15 +64,45 @@ chrome.runtime.onMessage.addListener(
         sendResponse({cmd: request.cmd});
     });
 
+
+//监听所有请求
+chrome.webRequest.onBeforeRequest.addListener(function (details) {
+        flag = false;
+        currentTabId = details.tabId;
+        sendMsg2Tab(currentTabId, {cmd: "stop"});
+        randomTimeExecute({max: 1000 * 60 * 3, min: 1000 * 60 * 8}, function (time) {
+            console.log("收到机器人验证，等待:" + time / 1000 + "秒");
+            console.log("恢复执行采集");
+            flag = true;
+            sendMsg2Tab(currentTabId, {cmd:"resume"});
+        });
+
+        return {cancel: true};
+    },
+    {urls: ["*://icp.chinaz.com/sys/gee?act=get*"]},
+    //check response: 1
+    //get response: {"success":1,"gt":"3216efb2733cb3a8bc5bb3e5e2146fe5","challenge":"119c7329e4c127daba312641f5286215","new_captcha":true}
+    ["blocking", "requestBody"]
+);
+
+//监听所有请求
+chrome.webRequest.onBeforeRequest.addListener(function (details) {
+        return {cancel: true};
+    },
+    {urls: ["*://icp.chinaz.com/sys/gee?act=check*"]},
+    //check response: 1
+    //get response: {"success":1,"gt":"3216efb2733cb3a8bc5bb3e5e2146fe5","challenge":"119c7329e4c127daba312641f5286215","new_captcha":true}
+    ["blocking", "requestBody"]
+);
 /**
  * request 请求成功
  */
-chrome.webRequest.onCompleted.addListener(function (detail) {
+chrome.webRequest.onCompleted.addListener(function (details) {
 
     if (flag) {
-        currentTabId = detail.tabId;
-        randomTimeExecute(1, (param, time) => {
-            console.log(time);
+        currentTabId = details.tabId;
+        randomTimeExecute({max: default_max, min: default_min}, (time) => {
+            console.log("请求间隔时间:" + time + "毫秒");
             sendMsg2Tab(currentTabId, {cmd: "parse_body"});
         });
     }
@@ -111,12 +110,13 @@ chrome.webRequest.onCompleted.addListener(function (detail) {
 }, {urls: ["*://icp.chinaz.com/Provinces/PageData"]}, ["extraHeaders"]);
 
 
-chrome.webRequest.onErrorOccurred.addListener(function (detail) {
+chrome.webRequest.onErrorOccurred.addListener(function (details) {
 
     if (flag) {
         flag = false;
-        currentTabId = detail.tabId;
-        randomTimeExecute(2, (param, time) => {
+        currentTabId = details.tabId;
+        randomTimeExecute({max: default_max, min: default_min}, (time) => {
+            console.log("请求间隔时间:" + time + "毫秒");
             sendMsg2Tab(currentTabId, {cmd: "stop"});
         });
     }
