@@ -4,6 +4,8 @@ var currentTabId;
 var default_max = 3000;
 var default_min = 5000;
 
+var robot = true;
+
 function randomTimeExecute(options, callback) {
     let maxInternal = options.max || default_max;
     let minInternal = options.min || default_min;
@@ -70,12 +72,16 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
         flag = false;
         currentTabId = details.tabId;
         sendMsg2Tab(currentTabId, {cmd: "stop"});
-        randomTimeExecute({max: 1000 * 60 * 3, min: 1000 * 60 * 8}, function (time) {
-            console.log("收到机器人验证，等待:" + time / 1000 + "秒");
-            console.log("恢复执行采集");
-            flag = true;
-            sendMsg2Tab(currentTabId, {cmd:"resume"});
-        });
+        if (robot) {
+            robot = false;
+            randomTimeExecute({max: 1000 * 60 * 3, min: 1000 * 60 * 8}, function (time) {
+                console.log("收到机器人验证，等待:" + time / 1000 + "秒");
+                console.log("恢复执行采集");
+                flag = true;
+                robot = true;
+                sendMsg2Tab(currentTabId, {cmd:"resume"});
+            });
+        }
 
         return {cancel: true};
     },
