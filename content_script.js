@@ -108,14 +108,19 @@ function parseDomain() {
 function doQueryHandler() {
 
     page = 1;
+
     var startFormat = startDate.format('YYYY-MM-DD');
     var endFormat = endDate.format('YYYY-MM-DD');
 
     $("a[val='cus']")[0].click();
-    $("#start").val(startFormat);
-    $("#end").val(endFormat);
+    setTimeout(()=>{
 
-    $('#btn_search')[0].click();
+        $("#start").val(startFormat);
+        $("#end").val(endFormat);
+
+        $('#btn_search')[0].click();
+    }, 1000);
+
 
 }
 
