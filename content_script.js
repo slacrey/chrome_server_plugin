@@ -8,6 +8,20 @@ var stopDate;
 var isStop = false;
 var stepQuery = 5;
 
+function triggerClick(el) {
+    if (el.click) {
+        el.click();
+    } else {
+        try {
+            var evt = document.createEvent('Event');
+            evt.initEvent('click', true, true);
+            el.dispatchEvent(evt);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+}
+
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
 
@@ -38,25 +52,22 @@ chrome.runtime.onMessage.addListener(
             $("div.layui-layer-shade").remove();
 
             isStop = false;
-            var currPageElement = $("#pagelist").children("a[data-page].col-white");
-            if (currPageElement && currPageElement.length > 0) {
+            chrome.storage.sync.get({
+                startDate: '2010-01-01',
+                endDate: '2010-01-06',
+                stopDate: '2015-01-01',
+                currentPage: 1
+            }, function (items) {
 
-                chrome.storage.sync.get({
-                    startDate: '2010-01-01',
-                    endDate: '2010-01-06',
-                    stopDate: '2015-01-01',
-                    currentPage: parseInt(currPageElement.text())
-                }, function (items) {
+                startDate = moment(items.startDate, ["YYYY-MM-DD"]);
+                endDate = moment(items.endDate, ["YYYY-MM-DD"]);
+                stepQuery = endDate.diff(startDate, 'day');
+                stopDate = items.stopDate;
 
-                    startDate = moment(items.startDate, ["YYYY-MM-DD"]);
-                    endDate = moment(items.endDate, ["YYYY-MM-DD"]);
-                    stepQuery = endDate.diff(startDate, 'day');
-                    stopDate = items.stopDate;
+                jumpPage = page = items.currentPage;
+                doQueryHandler();
+            });
 
-                    jumpPage = page = items.currentPage;
-                    doQueryHandler();
-                });
-            }
         } else if ("parse_body" === request.cmd) {
 
             isStop = false;
@@ -97,7 +108,7 @@ function saveQueryCondition() {
 function parseDomain() {
     if (jumpPage > 1) {
         $("#pn").val(jumpPage);
-        $("#pagelist a.col-white:last")[0].click();
+        triggerClick($("#pagelist a.col-white:last")[0]);
         page = jumpPage;
         jumpPage = 0;
     } else {
@@ -112,13 +123,15 @@ function doQueryHandler() {
     var startFormat = startDate.format('YYYY-MM-DD');
     var endFormat = endDate.format('YYYY-MM-DD');
 
-    $("a[val='cus']")[0].click();
-    setTimeout(()=>{
+    document.querySelector('a.animated');
+
+    triggerClick($("a[val='cus']")[0]);
+    setTimeout(() => {
 
         $("#start").val(startFormat);
         $("#end").val(endFormat);
 
-        $('#btn_search')[0].click();
+        triggerClick($('#btn_search')[0]);
     }, 1000);
 
 
@@ -178,7 +191,7 @@ function nextPageHandler() {
     var nextPage = $("#pagelist").children("a[title='下一页']");
     if (nextPage && nextPage.length > 0) {
         console.log("next page number:" + ++page);
-        nextPage[nextPage.length - 1].click();
+        triggerClick(nextPage[nextPage.length - 1]);
     }
 }
 

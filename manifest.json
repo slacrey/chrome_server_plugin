@@ -30,6 +30,7 @@
   },
   "content_scripts": [
     {
+      "run_at": "document_end",
       "matches": [
         "*://icp.chinaz.com/provinces"
       ],
