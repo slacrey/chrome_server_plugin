@@ -74,7 +74,7 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
         sendMsg2Tab(currentTabId, {cmd: "stop"});
         if (robot) {
             robot = false;
-            randomTimeExecute({max: 1000 * 60 * 3, min: 1000 * 60 * 8}, function (time) {
+            randomTimeExecute({max: 1000 * 60 * 5, min: 1000 * 60 * 10}, function (time) {
                 console.log("收到机器人验证，等待:" + time / 1000 + "秒");
                 console.log("恢复执行采集");
                 flag = true;
