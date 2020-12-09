@@ -99,10 +99,9 @@ chrome.webRequest.onCompleted.addListener(function (details) {
     let pageData = details.url.indexOf("://icp.chinaz.com/Provinces/PageData") != -1;
     if (pageData) {
         if (flag) {
-            currentTabId = details.tabId;
             randomTimeExecute({max: default_max, min: default_min}, (time) => {
                 console.log("请求间隔时间:" + time + "毫秒");
-                sendMsg2Tab(currentTabId, {cmd: "parse_body"});
+                sendMsg2Tab(details.tabId, {cmd: "parse_body"});
             });
         }
     } else {
